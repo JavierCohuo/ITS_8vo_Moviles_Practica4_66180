@@ -89,28 +89,48 @@ class RandomWords extends StatefulWidget {
   const RandomWords({Key? key}) : super(key: key);
 
   @override
-  RandomWordsState createState() => RandomWordsState();
+  _RandomWordsState createState() => _RandomWordsState();
 }
 
-class RandomWordsState extends State<RandomWords> {
-  final _suggestions = <WordPair>[];
-  final _biggerFont = const TextStyle(fontSize: 18.0);
+class _RandomWordsState extends State<RandomWords> {
+  final ScrollController _scrollController = ScrollController();
+  final List<WordPair> _suggestions = <WordPair>[];
+  final TextStyle _biggerFont = const TextStyle(fontSize: 18.0);
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+    _loadMore();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.extentAfter < 500) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() {
+    setState(() {
+      _suggestions.addAll(generateWordPairs().take(20));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _buildSuggestions();
-  }
-
-  Widget _buildSuggestions() {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
-      itemBuilder: (context, i) {
+      itemCount: _suggestions.length * 2,
+      itemBuilder: (BuildContext context, int i) {
         if (i.isOdd) return const Divider();
-
-        final index = i ~/ 2;
-        if (index >= _suggestions.length) {
-          _suggestions.addAll(generateWordPairs().take(10));
-        }
+        final int index = i ~/ 2;
         return _buildRow(_suggestions[index]);
       },
     );
@@ -130,39 +150,55 @@ class RandomNouns extends StatefulWidget {
   const RandomNouns({Key? key}) : super(key: key);
 
   @override
-  RandomNounsState createState() => RandomNounsState();
+  _RandomNounsState createState() => _RandomNounsState();
 }
 
-class RandomNounsState extends State<RandomNouns> {
-  final _suggestions = <WordPair>[];
-  final _biggerFont = const TextStyle(fontSize: 18.0);
+class _RandomNounsState extends State<RandomNouns> {
+  final ScrollController _scrollController = ScrollController();
+  final List<String> _nouns = <String>[];
+  final TextStyle _biggerFont = const TextStyle(fontSize: 18.0);
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+    _loadMore();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.extentAfter < 500) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() {
+    setState(() {
+      _nouns.addAll(generateWordPairs().take(20).map((pair) => pair.first));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _buildSuggestions();
-  }
-
-  Widget _buildSuggestions() {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
-      itemBuilder: (context, i) {
+      itemCount: _nouns.length * 2,
+      itemBuilder: (BuildContext context, int i) {
         if (i.isOdd) return const Divider();
-
-        final index = i ~/ 2;
-        if (index >= _suggestions.length) {
-          _suggestions.addAll(generateWordPairs().take(10));
-        }
-        return _buildRow(_suggestions[index]);
+        final int index = i ~/ 2;
+        return ListTile(
+          title: Text(
+            _nouns[index],
+            style: _biggerFont,
+          ),
+        );
       },
-    );
-  }
-
-  Widget _buildRow(WordPair pair) {
-    return ListTile(
-      title: Text(
-        pair.asPascalCase,
-        style: _biggerFont,
-      ),
     );
   }
 }
